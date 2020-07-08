@@ -44,6 +44,39 @@ import scala.language.implicitConversions
  * For Exercise 4 and 5 you will need different versions of the conversion method.
  * It's okay if you can pass only either 4 or 5 at a time.
  */
-class Euro {
+abstract class Currency(val symbol: String)
 
+class Euro(var euro: Int, var cents: Int = 0) extends Currency("EUR") with Ordered[Euro] {
+
+  val inCents = euro * 100 + cents
+
+  def +(euroToAdd: Euro): Euro = Euro.fromCents(inCents + euroToAdd.inCents)
+  def *(multiplier: Int): Euro = Euro.fromCents(inCents * multiplier)
+  def /(divider: Int): Euro = if (divider <= 0) throw new IllegalArgumentException else Euro.fromCents(inCents / divider)
+
+  override def toString(): String = {
+    val cent = if (cents == 0) "--" else if (cents < 10) "0" + cents else cents
+    symbol + ": " + euro + "," + cent
+  }
+
+  override def compare(that: Euro): Int = inCents - that.inCents
+  //if (this.inCents < that.inCents) -1 else if (this.inCents > that.inCents) 1 else 0
+
+}
+
+object Euro {
+  def fromCents(initCents: Int): Euro = new Euro(initCents / 100, initCents % 100)
+
+  implicit class IntImplicit(i: Int) {
+    def *(euro: Euro) = euro * i
+  }
+
+  //Exercise 4
+  //implicit def dollarToEuro(dollar: Dollar): Euro = Euro.fromCents(DefaultCurrencyConverter.toEuroCents(dollar.inCents))
+
+  implicit def dollarToEuro(dollar: Dollar)(implicit converter: CurrencyConverter): Euro = Euro.fromCents(converter.toEuroCents(dollar.inCents))
+}
+
+class Dollar(var dollar: Int, var cents: Int = 0) {
+  val inCents = dollar * 100 + cents
 }
